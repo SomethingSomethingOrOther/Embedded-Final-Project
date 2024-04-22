@@ -10,8 +10,14 @@
 #*****************************************************************************
 
 # Add your Source files to this variable
-SOURCES =
+HOSTSOURCES = main.c memory.c \
+
+MSPSOURCES= main.c memory.c \
+			interrupts_msp432p401r_gcc.c \
+			startup_msp432p401r_gcc.c \ 
+			system_msp432p401r_gcc.c \
+
 
 # Add your include paths to this variable
-INCLUDES = 
+INCLUDES = -I./include
 
