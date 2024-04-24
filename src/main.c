@@ -20,8 +20,10 @@
  * @date April 1 2017
  *
  */
+#define PLATFORM HOST
 #include "platform.h"
 #include "memory.h"
+
 
 #define MAX_LENGTH (10)
 char buffer[MAX_LENGTH];

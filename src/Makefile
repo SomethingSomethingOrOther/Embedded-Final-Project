@@ -33,39 +33,63 @@
 #------------------------------------------------------------------------------
 include sources.mk
 
-ifeq ($(PLATFORM),HOST)
-	CC := gcc
-
-else 
-	CC  := arm-none-eabi-gcc
-	LDFLAGS = -Wl, -T msp432p401r.lds
-endif
-
-DEPS =$(HOSTSOURCES:.c=.dep)
-ASSEMBLY = $(HOSTSOURCES:.c=.asm) 
-OBJS = $(HOSTSOURCES:.c=.o)
+PLATFORM=HOST
+GENERAL_FLAGS = -Wall -Werror -g  -O0 -std=c99
 TARGET = c1m2
 
-$(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $(TARGET) $(OBJS)
+ifeq ($(PLATFORM),HOST)
+	CC := gcc
+	SIZE = size
+ else 
+	CC  := arm-none-eabi-gcc
+	SIZE := arm-none-eabi-size
+	LINKER_FILE = -T, msp432p401r.lds
+	CPU = cortex-m4
+	ARCH= arm7ve-m
+	PLATFORM_FLAGS = -mcpu=$(CPU) -march=$(ARCH) -mfloat-abi=hard -mfpu=fpv4-sp-d16 --specs=nosys.specs 
+endif
 
-%.o : %.c 
-	$(CC) -c $@ $^
+LDFLAGS := -Wl,-Map=$(TARGET).map $(LINKER_FILE)
+CFLAGS := $(GENERAL_FLAGS) $(PLATFORM_FLAGS)
+CPPFLAGS := -D$(PLATFORM) $(INCLUDES)
 
-%.i : %.c 
-	$(CC) -E $@ $^
+OBJS:= $(SOURCES:.c=.o)
+ASMS:= $(SOURCES:.c=.asm)
+DEPS = $(SOURCES:.c=.dep)
+PPSR:= $(SOURCES:.c=.i)
+MAPS:= $(SOURCES:.c=.map)
 
-%.asm : %.c 
-	$(CC) -S $@ $^
+.PHONY : compile-all build clean
 
-%.dep : %.c 
-	$(CC) -Wl,-Map=$(TARGET).map $@ $^
+build: $(TARGET)
+
+$(TARGET): $(OBJS) $(DEPS)
+	$(CC) $(OBJS) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@
+	$(SIZE) $@
+
+%.i: %.c
+	$(CC) -E $< $(CFLAGS) $(CPPFLAGS) -o $@
+
+
+%.asm: %.c
+	$(CC) -S $< $(CFLAGS) $(CPPFLAGS) -o $@
+
+
+%.o: %.c
+	$(CC) -c $< $(CFLAGS) $(CPPFLAGS) -o $@
+
+
+%.dep: %.c
+	$(CC) -E -M $< $(CFLAGS) $(CPPFLAGS) -o $@
+
+
+compile-all: $(OBJS)
 
 .PHONY: clean
-clean:
-	del -f $(OBJS) $(ASSEMBLY) $(PREPROCESSOR) $(TARGET) 
 
-
+clean: 
+    # This should remove all generated files.
+	del -f $(TARGET) $(MAPS) $(OBJS) $(ASMS) $(PPSR) $(DEPS)
 
 
 
