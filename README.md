@@ -1,2 +1,3 @@
 Description
-  Implement memory and makefile for msp432
+_________________________________________________________________________________________________________________________________________________
+  Hardware abstraction layer and makefile for msp432
